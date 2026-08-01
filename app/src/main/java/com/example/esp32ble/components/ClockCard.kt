@@ -209,7 +209,7 @@ private fun AnalogClockFace(time: String) {
                 cap = StrokeCap.Round
             )
 
-            // Center pin
+            // Center pin check
             drawCircle(
                 color = secondHandColor,
                 radius = 6f,
