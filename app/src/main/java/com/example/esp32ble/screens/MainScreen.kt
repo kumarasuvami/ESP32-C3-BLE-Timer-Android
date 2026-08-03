@@ -128,7 +128,8 @@ fun MainScreen() {
                 )
 
                 3 -> SettingsScreen(
-                    bleManager = bleManager
+                    bleManager = bleManager,
+                    viewModel = bleViewModel
                 )
 
             }

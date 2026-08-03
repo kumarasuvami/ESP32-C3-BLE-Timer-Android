@@ -24,13 +24,27 @@ import androidx.compose.ui.unit.dp
 import com.example.esp32ble.BLEManager
 import com.example.esp32ble.ScannedDevice
 
+import android.content.Intent
+import android.location.LocationManager
+import android.provider.Settings
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.TextButton
+import androidx.compose.ui.platform.LocalContext
+import android.content.Context
+import com.example.esp32ble.BLEViewModel
 @Composable
 fun SettingsScreen(
-    bleManager: BLEManager
-) {
+    bleManager: BLEManager,
+    viewModel: BLEViewModel
+){
+    val context = LocalContext.current
 
-    var status by remember {
-        mutableStateOf("Not Connected")
+    var showLocationDialog by remember {
+        mutableStateOf(false)
+    }
+
+    var message by remember {
+        mutableStateOf("")
     }
 
     val devices = remember {
@@ -46,16 +60,15 @@ fun SettingsScreen(
             }
 
         }
-
         bleManager.onConnectionChanged = { connected ->
 
-            status = if (connected) {
-                "Connected"
+            if (connected) {
+                message = ""
             } else {
-                "Not Connected"
+                message = "Disconnected"
             }
-
         }
+
 
     }
 
@@ -71,23 +84,44 @@ fun SettingsScreen(
             style = MaterialTheme.typography.headlineMedium
         )
 
-        Text(status)
+        Text(
+            text = if (viewModel.connected)
+                "Connected"
+            else
+                "Not Connected"
+        )
+
+        Text(message)
 
         Button(
             onClick = {
 
                 devices.clear()
 
-                if (bleManager.isBluetoothEnabled()) {
+                if (!bleManager.isBluetoothEnabled()) {
 
-                    status = "Scanning..."
-
-                    bleManager.startScan()
+                    message = "Bluetooth OFF"
 
                 } else {
 
-                    status = "Bluetooth OFF"
+                    val locationManager =
+                        context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
 
+                    val locationEnabled =
+                        locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER) ||
+                                locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)
+
+                    if (!locationEnabled) {
+
+                        message = "Location OFF"
+                        showLocationDialog = true
+
+                    } else {
+
+                        message = "Scanning..."
+                        bleManager.startScan()
+
+                    }
                 }
 
             }
@@ -100,7 +134,7 @@ fun SettingsScreen(
 
                 bleManager.disconnect()
 
-                status = "Disconnected"
+
 
             }
         ) {
@@ -124,7 +158,7 @@ fun SettingsScreen(
                         .padding(vertical = 4.dp)
                         .clickable {
 
-                            status = "Connecting..."
+                            message = "Connecting..."
 
                             bleManager.connect(device.device)
 
@@ -156,6 +190,43 @@ fun SettingsScreen(
 
         Text("ESP32 Timer Controller")
 
+    }
+
+    if (showLocationDialog) {
+
+        AlertDialog(
+            onDismissRequest = {
+                showLocationDialog = false
+            },
+            title = {
+                Text("Location Required")
+            },
+            text = {
+                Text("Please turn on Location to scan for BLE devices.")
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showLocationDialog = false
+
+                        context.startActivity(
+                            Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS)
+                        )
+                    }
+                ) {
+                    Text("Settings")
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = {
+                        showLocationDialog = false
+                    }
+                ) {
+                    Text("Cancel")
+                }
+            }
+        )
     }
 
 }

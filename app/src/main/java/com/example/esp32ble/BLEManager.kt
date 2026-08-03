@@ -1,7 +1,7 @@
 package com.example.esp32ble
 
 import android.Manifest
-import android.annotation.SuppressLint
+
 import android.bluetooth.*
 import android.bluetooth.le.BluetoothLeScanner
 import android.bluetooth.le.ScanCallback
@@ -14,6 +14,11 @@ import android.util.Log
 import java.util.UUID
 import java.util.LinkedList
 import java.util.Queue
+
+import android.location.LocationManager
+
+
+
 class BLEManager(
     private val context: Context,
     private val viewModel: BLEViewModel
@@ -74,6 +79,14 @@ class BLEManager(
     private fun hasConnectPermission(): Boolean =
         hasPermission(Manifest.permission.BLUETOOTH_CONNECT)
 
+
+    fun isLocationEnabled(): Boolean {
+        val lm = context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
+
+        return lm.isProviderEnabled(LocationManager.GPS_PROVIDER) ||
+                lm.isProviderEnabled(LocationManager.NETWORK_PROVIDER)
+    }
+
     // ---- Scanning ----
 
     fun startScan() {
@@ -81,6 +94,7 @@ class BLEManager(
             Log.e(TAG, "Bluetooth OFF")
             return
         }
+
 
         if (!hasScanPermission()) {
             Log.e(TAG, "Missing BLUETOOTH_SCAN permission, cannot start scan")
@@ -139,21 +153,27 @@ class BLEManager(
     }
 
     fun disconnect() {
+
         if (!hasConnectPermission()) {
-            Log.e(TAG, "Missing BLUETOOTH_CONNECT permission, cannot disconnect")
+            Log.e(TAG, "Missing BLUETOOTH_CONNECT permission")
             return
         }
+
         try {
             bluetoothGatt?.disconnect()
             bluetoothGatt?.close()
         } catch (e: SecurityException) {
-            Log.e(TAG, "SecurityException on disconnect: ${e.message}")
+            Log.e(TAG, "SecurityException: ${e.message}")
         }
+
         bluetoothGatt = null
         dataCharacteristic = null
+
+        viewModel.updateConnectionState(false)
+        onConnectionChanged?.invoke(false)
+
         Log.d(TAG, "Disconnected")
     }
-
 //----------------------------------------------------
 // Queue Write
 //----------------------------------------------------
@@ -266,8 +286,8 @@ class BLEManager(
 
             if (newState == BluetoothProfile.STATE_CONNECTED) {
 
+                viewModel.updateConnectionState(true)
                 onConnectionChanged?.invoke(true)
-
                 bluetoothGatt = gatt
 
                 Log.d(TAG, "Connected")
@@ -280,6 +300,7 @@ class BLEManager(
                 }
             } else if (newState == BluetoothProfile.STATE_DISCONNECTED) {
 
+                viewModel.updateConnectionState(false)
                 onConnectionChanged?.invoke(false)
 
                 Log.d(TAG, "Disconnected")
