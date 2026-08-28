@@ -255,7 +255,8 @@ class BLEManager(
                     "${timer.days}," +
                     "${if (timer.cyclic) 1 else 0}," +
                     "${timer.cycleOnMinutes}," +
-                    "${timer.cycleOffMinutes}"
+                    "${timer.cycleOffMinutes}," +
+                    "${if (timer.eventTriggered) 1 else 0}"
 
         Log.d(TAG, "TX Timer = $cmd")
 
@@ -586,7 +587,7 @@ class BLEManager(
 
         val p = data.split(",")
 
-        if (p.size != 12)
+        if (p.size != 13)
             throw IllegalArgumentException(
                 "Invalid timer data: $data"
             )
@@ -615,7 +616,9 @@ class BLEManager(
 
             cycleOnMinutes = p[10].toInt(),
 
-            cycleOffMinutes = p[11].toInt()
+            cycleOffMinutes = p[11].toInt(),
+
+            eventTriggered = p[12] == "1"
         )
     }
 

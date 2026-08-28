@@ -28,5 +28,10 @@ data class TimerData(
     var cycleOnMinutes: Int = 0,
 
     // Cyclic OFF duration in minutes
-    var cycleOffMinutes: Int = 0
+    var cycleOffMinutes: Int = 0,
+
+    // Event triggered timer
+    // false = normal scheduled cyclic operation
+    // true  = GPIO event starts the cyclic operation
+    var eventTriggered: Boolean = false
 )
