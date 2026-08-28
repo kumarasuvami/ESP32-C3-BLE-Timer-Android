@@ -23,10 +23,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.esp32ble.TimerData
 
-/**
- * Matches TimerCard's elevated "classic" palette.
- * Promote to a shared file if a third screen needs it.
- */
 private object EditScreenColors {
     val SurfaceTop = Color(0xFF1C2027)
     val SurfaceBottom = Color(0xFF15181D)
@@ -68,6 +64,20 @@ fun TimerEditScreen(
     var relay by remember { mutableStateOf(timer.relay) }
     var days by remember { mutableStateOf(timer.days) }
 
+    // ----------------------------------------------------
+    // Cyclic timer
+    // ----------------------------------------------------
+
+    var cyclic by remember { mutableStateOf(timer.cyclic) }
+
+    var cycleOnMinutes by remember {
+        mutableStateOf(timer.cycleOnMinutes.toString())
+    }
+
+    var cycleOffMinutes by remember {
+        mutableStateOf(timer.cycleOffMinutes.toString())
+    }
+
     val dayNames = listOf("S", "M", "T", "W", "T", "F", "S")
 
     val fieldColors = OutlinedTextFieldDefaults.colors(
@@ -82,7 +92,11 @@ fun TimerEditScreen(
         unfocusedContainerColor = colors.Field
     )
 
-    val monoFieldStyle = TextStyle(fontFamily = MonoFamily, fontSize = 16.sp)
+    val monoFieldStyle =
+        TextStyle(
+            fontFamily = MonoFamily,
+            fontSize = 16.sp
+        )
 
     Surface(
         shape = PanelShape,
@@ -90,20 +104,31 @@ fun TimerEditScreen(
         shadowElevation = 12.dp,
         modifier = Modifier.fillMaxWidth()
     ) {
+
         Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .heightIn(max = 680.dp)
-                .background(Brush.verticalGradient(listOf(colors.SurfaceTop, colors.SurfaceBottom)))
+                .background(
+                    Brush.verticalGradient(
+                        listOf(
+                            colors.SurfaceTop,
+                            colors.SurfaceBottom
+                        )
+                    )
+                )
                 .verticalScroll(rememberScrollState())
                 .padding(24.dp),
+
             verticalArrangement = Arrangement.spacedBy(22.dp)
         ) {
 
             //----------------------------------------------------
             // Header
             //----------------------------------------------------
+
             Column {
+
                 Text(
                     text = "TMR-${(timer.index + 1).toString().padStart(2, '0')}",
                     color = colors.TextMuted,
@@ -111,7 +136,9 @@ fun TimerEditScreen(
                     fontSize = 12.sp,
                     letterSpacing = 1.sp
                 )
+
                 Spacer(Modifier.height(4.dp))
+
                 Text(
                     text = "Edit Timer",
                     color = colors.TextPrimary,
@@ -120,10 +147,16 @@ fun TimerEditScreen(
                 )
             }
 
+            //----------------------------------------------------
+            // Timer name
+            //----------------------------------------------------
+
             OutlinedTextField(
                 value = name,
                 onValueChange = { name = it },
-                label = { Text("Timer name") },
+                label = {
+                    Text("Timer name")
+                },
                 singleLine = true,
                 colors = fieldColors,
                 shape = FieldShape,
@@ -131,26 +164,39 @@ fun TimerEditScreen(
             )
 
             //----------------------------------------------------
-            // Enable toggle
+            // Enable
             //----------------------------------------------------
+
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .clip(FieldShape)
                     .background(colors.Field)
-                    .padding(horizontal = 18.dp, vertical = 14.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+                    .padding(
+                        horizontal = 18.dp,
+                        vertical = 14.dp
+                    ),
+
+                horizontalArrangement =
+                    Arrangement.SpaceBetween,
+
+                verticalAlignment =
+                    Alignment.CenterVertically
             ) {
+
                 Text(
                     "Enabled",
                     color = colors.TextPrimary,
                     fontSize = 15.sp,
                     fontWeight = FontWeight.Medium
                 )
+
                 Switch(
                     checked = enable,
-                    onCheckedChange = { enable = it },
+                    onCheckedChange = {
+                        enable = it
+                    },
+
                     colors = SwitchDefaults.colors(
                         checkedThumbColor = Color(0xFF08211D),
                         checkedTrackColor = colors.Accent,
@@ -165,6 +211,7 @@ fun TimerEditScreen(
             //----------------------------------------------------
             // Schedule
             //----------------------------------------------------
+
             SectionLabel("Schedule")
 
             Column(
@@ -173,23 +220,225 @@ fun TimerEditScreen(
                     .clip(FieldShape)
                     .background(colors.Field)
                     .padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(14.dp)
+
+                verticalArrangement =
+                    Arrangement.spacedBy(14.dp)
             ) {
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+
+                Column(
+                    verticalArrangement =
+                        Arrangement.spacedBy(8.dp)
+                ) {
+
                     FieldGroupLabel("ON TIME")
-                    Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                        TimeField(onHour, { onHour = it }, "HH", colors, monoFieldStyle, Modifier.weight(1f))
-                        TimeField(onMinute, { onMinute = it }, "MM", colors, monoFieldStyle, Modifier.weight(1f))
+
+                    Row(
+                        horizontalArrangement =
+                            Arrangement.spacedBy(10.dp)
+                    ) {
+
+                        TimeField(
+                            onHour,
+                            { onHour = it },
+                            "HH",
+                            colors,
+                            monoFieldStyle,
+                            Modifier.weight(1f)
+                        )
+
+                        TimeField(
+                            onMinute,
+                            { onMinute = it },
+                            "MM",
+                            colors,
+                            monoFieldStyle,
+                            Modifier.weight(1f)
+                        )
                     }
                 }
 
-                HorizontalDivider(color = colors.SurfaceElevated, thickness = 1.dp)
+                HorizontalDivider(
+                    color = colors.SurfaceElevated,
+                    thickness = 1.dp
+                )
 
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Column(
+                    verticalArrangement =
+                        Arrangement.spacedBy(8.dp)
+                ) {
+
                     FieldGroupLabel("OFF TIME")
-                    Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                        TimeField(offHour, { offHour = it }, "HH", colors, monoFieldStyle, Modifier.weight(1f))
-                        TimeField(offMinute, { offMinute = it }, "MM", colors, monoFieldStyle, Modifier.weight(1f))
+
+                    Row(
+                        horizontalArrangement =
+                            Arrangement.spacedBy(10.dp)
+                    ) {
+
+                        TimeField(
+                            offHour,
+                            { offHour = it },
+                            "HH",
+                            colors,
+                            monoFieldStyle,
+                            Modifier.weight(1f)
+                        )
+
+                        TimeField(
+                            offMinute,
+                            { offMinute = it },
+                            "MM",
+                            colors,
+                            monoFieldStyle,
+                            Modifier.weight(1f)
+                        )
+                    }
+                }
+            }
+
+            //----------------------------------------------------
+            // Cyclic Timer
+            //----------------------------------------------------
+
+            SectionLabel("Cyclic Timer")
+
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(FieldShape)
+                    .background(colors.Field)
+                    .padding(16.dp),
+
+                verticalArrangement =
+                    Arrangement.spacedBy(14.dp)
+            ) {
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+
+                    horizontalArrangement =
+                        Arrangement.SpaceBetween,
+
+                    verticalAlignment =
+                        Alignment.CenterVertically
+                ) {
+
+                    Column {
+
+                        Text(
+                            text = "Cyclic operation",
+                            color = colors.TextPrimary,
+                            fontSize = 15.sp,
+                            fontWeight = FontWeight.Medium
+                        )
+
+                        Text(
+                            text =
+                                "Repeat ON / OFF inside the schedule",
+                            color = colors.TextSecondary,
+                            fontSize = 12.sp
+                        )
+                    }
+
+                    Switch(
+                        checked = cyclic,
+                        onCheckedChange = {
+                            cyclic = it
+                        },
+
+                        colors = SwitchDefaults.colors(
+                            checkedThumbColor = Color(0xFF08211D),
+                            checkedTrackColor = colors.Accent,
+                            uncheckedThumbColor = colors.TextMuted,
+                            uncheckedTrackColor = colors.SurfaceElevated,
+                            uncheckedBorderColor = Color.Transparent,
+                            checkedBorderColor = Color.Transparent
+                        )
+                    )
+                }
+
+                //------------------------------------------------
+                // Show cycle settings only when enabled
+                //------------------------------------------------
+
+                if (cyclic) {
+
+                    HorizontalDivider(
+                        color = colors.SurfaceElevated,
+                        thickness = 1.dp
+                    )
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+
+                        horizontalArrangement =
+                            Arrangement.spacedBy(10.dp)
+                    ) {
+
+                        OutlinedTextField(
+                            value = cycleOnMinutes,
+
+                            onValueChange = {
+                                if (
+                                    it.all { char ->
+                                        char.isDigit()
+                                    }
+                                ) {
+                                    cycleOnMinutes = it
+                                }
+                            },
+
+                            label = {
+                                Text(
+                                    "ON minutes",
+                                    fontFamily = MonoFamily,
+                                    fontSize = 11.sp
+                                )
+                            },
+
+                            singleLine = true,
+
+                            colors = fieldColors,
+
+                            shape = FieldShape,
+
+                            textStyle = monoFieldStyle,
+
+                            modifier =
+                                Modifier.weight(1f)
+                        )
+
+                        OutlinedTextField(
+                            value = cycleOffMinutes,
+
+                            onValueChange = {
+                                if (
+                                    it.all { char ->
+                                        char.isDigit()
+                                    }
+                                ) {
+                                    cycleOffMinutes = it
+                                }
+                            },
+
+                            label = {
+                                Text(
+                                    "OFF minutes",
+                                    fontFamily = MonoFamily,
+                                    fontSize = 11.sp
+                                )
+                            },
+
+                            singleLine = true,
+
+                            colors = fieldColors,
+
+                            shape = FieldShape,
+
+                            textStyle = monoFieldStyle,
+
+                            modifier =
+                                Modifier.weight(1f)
+                        )
                     }
                 }
             }
@@ -197,87 +446,212 @@ fun TimerEditScreen(
             //----------------------------------------------------
             // Relay
             //----------------------------------------------------
+
             SectionLabel("Relay channel")
 
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                RelayOption("Relay 1", selected = relay == 0, colors = colors) { relay = 0 }
-                RelayOption("Relay 2", selected = relay == 1, colors = colors) { relay = 1 }
-                RelayOption("Both", selected = relay == 2, colors = colors) { relay = 2 }
+            Row(
+                horizontalArrangement =
+                    Arrangement.spacedBy(8.dp)
+            ) {
+
+                RelayOption(
+                    "Relay 1",
+                    selected = relay == 0,
+                    colors = colors
+                ) {
+                    relay = 0
+                }
+
+                RelayOption(
+                    "Relay 2",
+                    selected = relay == 1,
+                    colors = colors
+                ) {
+                    relay = 1
+                }
+
+                RelayOption(
+                    "Both",
+                    selected = relay == 2,
+                    colors = colors
+                ) {
+                    relay = 2
+                }
             }
 
             //----------------------------------------------------
             // Days
             //----------------------------------------------------
+
             SectionLabel("Active days")
 
             LazyVerticalGrid(
                 columns = GridCells.Fixed(7),
-                modifier = Modifier.height(44.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+
+                modifier =
+                    Modifier.height(44.dp),
+
+                horizontalArrangement =
+                    Arrangement.spacedBy(8.dp)
             ) {
+
                 items(dayNames.indices.toList()) { index ->
-                    val selected = (days and (1 shl index)) != 0
+
+                    val selected =
+                        (days and (1 shl index)) != 0
 
                     DayOption(
                         label = dayNames[index],
                         selected = selected,
                         colors = colors,
+
                         onClick = {
-                            days = if (selected)
-                                days and (1 shl index).inv()
-                            else
-                                days or (1 shl index)
+
+                            days =
+                                if (selected) {
+
+                                    days and
+                                            (1 shl index).inv()
+
+                                } else {
+
+                                    days or
+                                            (1 shl index)
+                                }
                         }
                     )
                 }
             }
 
-            Spacer(Modifier.height(4.dp))
+            Spacer(
+                Modifier.height(4.dp)
+            )
 
             //----------------------------------------------------
             // Actions
             //----------------------------------------------------
-            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+
+            Row(
+                horizontalArrangement =
+                    Arrangement.spacedBy(12.dp)
+            ) {
+
                 OutlinedButton(
-                    modifier = Modifier.weight(1f),
+                    modifier =
+                        Modifier.weight(1f),
+
                     onClick = onCancel,
+
                     shape = PillShape,
-                    border = androidx.compose.foundation.BorderStroke(1.dp, colors.SurfaceElevated),
-                    colors = ButtonDefaults.outlinedButtonColors(contentColor = colors.TextSecondary),
-                    contentPadding = PaddingValues(vertical = 13.dp)
+
+                    border =
+                        androidx.compose.foundation.BorderStroke(
+                            1.dp,
+                            colors.SurfaceElevated
+                        ),
+
+                    colors =
+                        ButtonDefaults.outlinedButtonColors(
+                            contentColor =
+                                colors.TextSecondary
+                        ),
+
+                    contentPadding =
+                        PaddingValues(vertical = 13.dp)
                 ) {
-                    Text("Cancel", fontSize = 15.sp, fontWeight = FontWeight.Medium)
+
+                    Text(
+                        "Cancel",
+                        fontSize = 15.sp,
+                        fontWeight = FontWeight.Medium
+                    )
                 }
 
+                //------------------------------------------------
+                // SAVE
+                //------------------------------------------------
+
                 Button(
-                    modifier = Modifier.weight(1f),
+                    modifier =
+                        Modifier.weight(1f),
+
                     shape = PillShape,
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = colors.Accent,
-                        contentColor = Color(0xFF08211D)
-                    ),
-                    elevation = ButtonDefaults.buttonElevation(
-                        defaultElevation = 4.dp,
-                        pressedElevation = 1.dp
-                    ),
-                    contentPadding = PaddingValues(vertical = 13.dp),
+
+                    colors =
+                        ButtonDefaults.buttonColors(
+                            containerColor =
+                                colors.Accent,
+
+                            contentColor =
+                                Color(0xFF08211D)
+                        ),
+
+                    elevation =
+                        ButtonDefaults.buttonElevation(
+                            defaultElevation = 4.dp,
+                            pressedElevation = 1.dp
+                        ),
+
+                    contentPadding =
+                        PaddingValues(vertical = 13.dp),
+
                     onClick = {
-                        timer.name = name
-                        timer.enable = enable
 
-                        timer.onHour = onHour.toIntOrNull() ?: 0
-                        timer.onMinute = onMinute.toIntOrNull() ?: 0
+                        //------------------------------------------------
+                        // IMPORTANT:
+                        // TimerData uses val properties.
+                        // Therefore use copy(), NOT timer.name = ...
+                        //------------------------------------------------
 
-                        timer.offHour = offHour.toIntOrNull() ?: 0
-                        timer.offMinute = offMinute.toIntOrNull() ?: 0
+                        val updatedTimer =
+                            timer.copy(
 
-                        timer.relay = relay
-                        timer.days = days
+                                name = name,
 
-                        onSave(timer)
+                                enable = enable,
+
+                                onHour =
+                                    onHour.toIntOrNull()
+                                        ?: 0,
+
+                                onMinute =
+                                    onMinute.toIntOrNull()
+                                        ?: 0,
+
+                                offHour =
+                                    offHour.toIntOrNull()
+                                        ?: 0,
+
+                                offMinute =
+                                    offMinute.toIntOrNull()
+                                        ?: 0,
+
+                                relay = relay,
+
+                                days = days,
+
+                                cyclic = cyclic,
+
+                                cycleOnMinutes =
+                                    cycleOnMinutes
+                                        .toIntOrNull()
+                                        ?: 0,
+
+                                cycleOffMinutes =
+                                    cycleOffMinutes
+                                        .toIntOrNull()
+                                        ?: 0
+                            )
+
+                        onSave(updatedTimer)
                     }
                 ) {
-                    Text("Save", fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
+
+                    Text(
+                        "Save",
+                        fontSize = 15.sp,
+                        fontWeight = FontWeight.SemiBold
+                    )
                 }
             }
         }
@@ -285,7 +659,9 @@ fun TimerEditScreen(
 }
 
 @Composable
-private fun SectionLabel(text: String) {
+private fun SectionLabel(
+    text: String
+) {
     Text(
         text = text,
         color = EditScreenColors.TextSecondary,
@@ -296,7 +672,9 @@ private fun SectionLabel(text: String) {
 }
 
 @Composable
-private fun FieldGroupLabel(text: String) {
+private fun FieldGroupLabel(
+    text: String
+) {
     Text(
         text = text,
         color = EditScreenColors.TextMuted,
@@ -318,21 +696,52 @@ private fun TimeField(
     OutlinedTextField(
         value = value,
         onValueChange = onValueChange,
-        label = { Text(label, fontFamily = MonoFamily, fontSize = 11.sp) },
+
+        label = {
+            Text(
+                label,
+                fontFamily = MonoFamily,
+                fontSize = 11.sp
+            )
+        },
+
         singleLine = true,
-        colors = OutlinedTextFieldDefaults.colors(
-            focusedBorderColor = colors.Accent,
-            unfocusedBorderColor = colors.SurfaceElevated,
-            focusedLabelColor = colors.Accent,
-            unfocusedLabelColor = colors.TextMuted,
-            focusedTextColor = colors.TextPrimary,
-            unfocusedTextColor = colors.TextPrimary,
-            cursorColor = colors.Accent,
-            focusedContainerColor = colors.SurfaceTop,
-            unfocusedContainerColor = colors.SurfaceTop
-        ),
-        shape = RoundedCornerShape(12.dp),
+
+        colors =
+            OutlinedTextFieldDefaults.colors(
+                focusedBorderColor =
+                    colors.Accent,
+
+                unfocusedBorderColor =
+                    colors.SurfaceElevated,
+
+                focusedLabelColor =
+                    colors.Accent,
+
+                unfocusedLabelColor =
+                    colors.TextMuted,
+
+                focusedTextColor =
+                    colors.TextPrimary,
+
+                unfocusedTextColor =
+                    colors.TextPrimary,
+
+                cursorColor =
+                    colors.Accent,
+
+                focusedContainerColor =
+                    colors.SurfaceTop,
+
+                unfocusedContainerColor =
+                    colors.SurfaceTop
+            ),
+
+        shape =
+            RoundedCornerShape(12.dp),
+
         textStyle = textStyle,
+
         modifier = modifier
     )
 }
@@ -346,21 +755,34 @@ private fun RelayOption(
 ) {
     FilterChip(
         selected = selected,
+
         onClick = onClick,
-        label = { Text(label, fontSize = 13.sp, fontWeight = FontWeight.Medium) },
+
+        label = {
+            Text(
+                label,
+                fontSize = 13.sp,
+                fontWeight = FontWeight.Medium
+            )
+        },
+
         shape = PillShape,
-        colors = FilterChipDefaults.filterChipColors(
-            containerColor = colors.Field,
-            labelColor = colors.TextSecondary,
-            selectedContainerColor = colors.Accent,
-            selectedLabelColor = Color(0xFF08211D)
-        ),
-        border = FilterChipDefaults.filterChipBorder(
-            enabled = true,
-            selected = selected,
-            borderColor = Color.Transparent,
-            selectedBorderColor = Color.Transparent
-        )
+
+        colors =
+            FilterChipDefaults.filterChipColors(
+                containerColor = colors.Field,
+                labelColor = colors.TextSecondary,
+                selectedContainerColor = colors.Accent,
+                selectedLabelColor = Color(0xFF08211D)
+            ),
+
+        border =
+            FilterChipDefaults.filterChipBorder(
+                enabled = true,
+                selected = selected,
+                borderColor = Color.Transparent,
+                selectedBorderColor = Color.Transparent
+            )
     )
 }
 
@@ -375,18 +797,38 @@ private fun DayOption(
         modifier = Modifier
             .size(34.dp)
             .clip(CircleShape)
-            .background(if (selected) colors.Accent else colors.Field),
-        contentAlignment = Alignment.Center
+            .background(
+                if (selected)
+                    colors.Accent
+                else
+                    colors.Field
+            ),
+
+        contentAlignment =
+            Alignment.Center
     ) {
+
         androidx.compose.material3.IconButton(
             onClick = onClick,
             modifier = Modifier.matchParentSize()
         ) {
+
             Text(
                 text = label,
-                color = if (selected) Color(0xFF08211D) else colors.TextMuted,
+
+                color =
+                    if (selected)
+                        Color(0xFF08211D)
+                    else
+                        colors.TextMuted,
+
                 fontSize = 13.sp,
-                fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal
+
+                fontWeight =
+                    if (selected)
+                        FontWeight.Bold
+                    else
+                        FontWeight.Normal
             )
         }
     }

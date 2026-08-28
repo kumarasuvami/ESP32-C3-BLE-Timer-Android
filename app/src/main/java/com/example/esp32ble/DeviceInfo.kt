@@ -19,7 +19,30 @@ data class DeviceInfo(
     var relay1Mode: Int = 0,
     var relay2Mode: Int = 0,
 
+    // Timers
     var timers: MutableList<TimerData> =
-        MutableList(10) { TimerData(index = it) }
+        MutableList(10) { index ->
 
+            TimerData(
+                index = index,
+                name = "EMPTY",
+
+                enable = false,
+
+                onHour = 0,
+                onMinute = 0,
+
+                offHour = 0,
+                offMinute = 0,
+
+                days = 0,
+
+                relay = 0,
+
+                cyclic = false,
+
+                cycleOnMinutes = 0,
+                cycleOffMinutes = 0
+            )
+        }
 )
