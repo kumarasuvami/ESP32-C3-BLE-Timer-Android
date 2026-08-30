@@ -74,6 +74,10 @@ fun TimerEditScreen(
         mutableStateOf(timer.eventTriggered)
     }
 
+    var stateChangeEnabled by remember {
+        mutableStateOf(timer.stateChangeEnabled)
+    }
+
     var cycleOnMinutes by remember {
         mutableStateOf(timer.cycleOnMinutes.toString())
     }
@@ -492,7 +496,52 @@ fun TimerEditScreen(
                         )
                     }
 
+            //------------------------------------------------
+            // State Change
+            //------------------------------------------------
 
+                    HorizontalDivider(
+                        color = colors.SurfaceElevated,
+                        thickness = 1.dp
+                    )
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+
+                        Column {
+
+                            Text(
+                                text = "State change",
+                                color = colors.TextPrimary,
+                                fontSize = 15.sp,
+                                fontWeight = FontWeight.Medium
+                            )
+
+                            Text(
+                                text = "GPIO 5 LOW for 3 seconds changes ON / OFF stage",
+                                color = colors.TextSecondary,
+                                fontSize = 12.sp
+                            )
+                        }
+
+                        Switch(
+                            checked = stateChangeEnabled,
+                            onCheckedChange = {
+                                stateChangeEnabled = it
+                            },
+                            colors = SwitchDefaults.colors(
+                                checkedThumbColor = Color(0xFF08211D),
+                                checkedTrackColor = colors.Accent,
+                                uncheckedThumbColor = colors.TextMuted,
+                                uncheckedTrackColor = colors.SurfaceElevated,
+                                uncheckedBorderColor = Color.Transparent,
+                                checkedBorderColor = Color.Transparent
+                            )
+                        )
+                    }
 
                 }
             }
@@ -696,7 +745,9 @@ fun TimerEditScreen(
                                         .toIntOrNull()
                                         ?: 0,
 
-                                eventTriggered = eventTriggered
+                                eventTriggered = eventTriggered,
+
+                                stateChangeEnabled = stateChangeEnabled
                             )
 
                         onSave(updatedTimer)

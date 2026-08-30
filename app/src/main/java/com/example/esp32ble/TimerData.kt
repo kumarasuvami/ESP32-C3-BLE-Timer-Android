@@ -33,5 +33,10 @@ data class TimerData(
     // Event triggered timer
     // false = normal scheduled cyclic operation
     // true  = GPIO event starts the cyclic operation
-    var eventTriggered: Boolean = false
+    var eventTriggered: Boolean = false,
+
+    // State Change option
+    // false = GPIO HIGH stops / LOW starts cycle
+    // true  = LOW for 3 seconds changes ON ↔ OFF stage
+    var stateChangeEnabled: Boolean = false
 )

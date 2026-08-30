@@ -256,8 +256,8 @@ class BLEManager(
                     "${if (timer.cyclic) 1 else 0}," +
                     "${timer.cycleOnMinutes}," +
                     "${timer.cycleOffMinutes}," +
-                    "${if (timer.eventTriggered) 1 else 0}"
-
+                    "${if (timer.eventTriggered) 1 else 0}," +
+                    "${if (timer.stateChangeEnabled) 1 else 0}"
         Log.d(TAG, "TX Timer = $cmd")
 
         queueWrite(cmd)
@@ -587,7 +587,7 @@ class BLEManager(
 
         val p = data.split(",")
 
-        if (p.size != 13)
+        if (p.size != 14)
             throw IllegalArgumentException(
                 "Invalid timer data: $data"
             )
@@ -618,7 +618,9 @@ class BLEManager(
 
             cycleOffMinutes = p[11].toInt(),
 
-            eventTriggered = p[12] == "1"
+            eventTriggered = p[12] == "1",
+
+            stateChangeEnabled = p[13] == "1"
         )
     }
 
